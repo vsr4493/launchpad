@@ -1,6 +1,16 @@
 import {css} from '@emotion/core';
 
 const normalize = css`
+body {
+  font-family: 'Lato', sans-serif;
+}
+.fonts-loaded-1 body {
+  font-family: LatoInitial;
+}
+.fonts-loaded-2 body {
+  font-family: Lato;
+}
+
 html {
   line-height: 1.15; 
   -webkit-text-size-adjust: 100%; 
