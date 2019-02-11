@@ -1,3 +1,5 @@
+import flipTo from 'shared/utils/flipTo';
+
 let Hammer: any = null;
 if(typeof window !== 'undefined' && Hammer === null) {
   Hammer = require('hammerjs');
@@ -13,6 +15,11 @@ export const SLIDE_EVENTS = {
   SLIDE_CHANGE: 2,
 };
 
+export const SLIDER_MODES = {
+  ACTIVE: 1,
+  INACTIVE: 0,
+}
+
 export const mappable = (value: any) => (fn: Function) => fn(value);
 
 const getSlider = ( 
@@ -22,7 +29,7 @@ const getSlider = (
     gutterSize = 40 as number, 
     slideCount = 0 as number, 
     slideRefs = [] as Array<HTMLElement>, 
-    slideHookRefs = [] as Array<HTMLElement>, 
+    slideHookRefs = [] as Array<HTMLElement>,    
     slideHeight = document.documentElement.clientHeight as number, 
     slideWidth = document.body.clientWidth as number, 
   } = {}, 
@@ -62,6 +69,7 @@ const getSlider = (
     slideRefs: Array<HTMLElement>,
     slideHookRefs: Array<HTMLElement>,
     gutterSize: number,
+    isSliderActive: boolean,
   };
 
   /**
@@ -76,6 +84,7 @@ const getSlider = (
     slideRefs,
     slideHookRefs,
     gutterSize,
+    isSliderActive: true,
   };
 
   /**
@@ -228,6 +237,7 @@ const getSlider = (
     } else {
       // Jump back to original position
       requestViewUpdate();
+      postResetHook();
     }
   }
 
@@ -254,7 +264,7 @@ const getSlider = (
       switch(pageState.panMode) {
         case PAN_MODES.SLIDE_UP: {
           hookState.transform.translateY = e.deltaY;
-          hookState.opacity = (slideHeight / (e.distance * 10));
+          hookState.opacity = 1 - (e.distance * 3 / slideHeight)//(slideHeight / (e.distance * 10));
           break;
         }
         case PAN_MODES.SLIDE_DOWN: {
@@ -280,20 +290,21 @@ const getSlider = (
           slideTo(
             e.deltaX < 0 
               ? pageState.current + 1 
-              : pageState.current - 1, 
+              : pageState.current - 1,
             // Ensure that animation duration is between 150 - 250
             Math.min(250, Math.max(150, e.deltaTime))
           );
           break;
         }
         case PAN_MODES.SLIDE_DOWN: {
-          const thresholdExceeded = Math.abs(e.deltaY) > slideHeight / 2;
+          const thresholdExceeded = Math.abs(e.deltaY) > slideHeight / 4;
           slideTo(thresholdExceeded ? pageState.current + 1 : pageState.current, 250);
           break;  
         } 
         case PAN_MODES.SLIDE_UP: {
-          const thresholdExceeded = Math.abs(e.deltaY) > slideHeight / 2;
+          const thresholdExceeded = Math.abs(e.deltaY) > slideHeight / 4;
           if (thresholdExceeded) {
+            // Toggle slider view
             subscribers[SLIDE_EVENTS.HOOK_TOGGLE].map(mappable({
               activeSlide: pageState.current,
               $slide: slideRefs[pageState.current],
@@ -314,6 +325,17 @@ const getSlider = (
       }
       log("Swipe detected");
     },
+    tap(e: any) {
+      if(areHandlersPaused) {
+        return;
+      }
+      const xPos = e.center.x;
+      // Ensure that the xPosition lies in either left corridor or right corridor
+      if(xPos <  slideWidth * .4 || xPos > slideWidth *.6) {
+        // Depending on which half the xPos falls in, switch to next/previous slide
+        slideTo(xPos > slideWidth / 2 ? pageState.current + 1 : pageState.current - 1, 0);
+      }
+    }
   }
 
   // Can't touch this, todododo!
@@ -325,11 +347,26 @@ const getSlider = (
   hammertime.add(new Hammer.Pan({ threshold: 0, pointers: 1 }));
   hammertime.add(new Hammer.Swipe()).recognizeWith(hammertime.get('pan'));
   hammertime.add(new Hammer.Rotate({ threshold: 0 })).recognizeWith(hammertime.get('pan'));
+  hammertime.add(new Hammer.Tap({ threshold: 10, time: 250 }));
 
   // Attach event handlers
   hammertime.on("panstart panmove", touchActionHandlers.pan);
   hammertime.on("panend pancancel", touchActionHandlers.panEnd);
+  hammertime.on("tap", touchActionHandlers.tap);
   hammertime.on("swipe", touchActionHandlers.swipe);
+
+  /**
+   * Transition slider modes and dispatch appropriate events
+   */
+  // Store the current styles internally when slider is toggled off, and restore them when toggling on
+  function toggleSliderState() {
+    resetHook(false);
+    settings.isSliderActive = !settings.isSliderActive;
+    areHandlersPaused = !settings.isSliderActive;
+    Object.assign(settings.$target.style, {
+      height: `${settings.isSliderActive ? settings.slideHeight : (settings.slideHeight / 2)}px`,
+    });
+  }
 
   // Public methods be down there!
 
@@ -367,6 +404,7 @@ const getSlider = (
     on: subscribe,
     stop: stopSlider,
     setSliderState: setSliderState,
+    toggleSliderState,
   };
 }
 

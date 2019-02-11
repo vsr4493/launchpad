@@ -1,5 +1,5 @@
 import React from 'react';
-import flipTo from 'shared/utils/flipTo';
+import { css } from '@emotion/core';
 import getSlider, { SLIDE_EVENTS } from './slider';
 import * as styles from './styles';
 
@@ -37,45 +37,6 @@ class Collections extends React.Component<any, any> {
     });
   }
 
-  _toggleSliderOn = (e) => {
-    // Toggle body overflow
-    console.log("enabling slider");
-    this.setState({
-      showItemDetails: false,
-    }, () => {
-      document.body.style.overflow = 'hidden';
-    });
-  }
-
-  _toggleSliderOff = (e) => {
-    this.toggleSliderOff({
-      activeHook: e.target,
-    });
-  }
-
-  toggleSliderOff = ({ activeHook }) => {
-    // Toggle body overflow
-    this.slideManager.setSliderState(false);
-    document.body.style.overflow = 'visible';
-    this.setState({
-      showItemDetails: true,
-    }, () => {
-      // Reset transforms completely
-      activeHook.style.opacity = 0;
-      activeHook.style.transform = '';
-      activeHook.style.position = 'absolute';
-      activeHook.style.right = '5px';
-      activeHook.style.bottom = '0px';
-      activeHook.style.left = 'auto';
-      activeHook.style.opacity = 1;
-      flipTo(this.$slider, ($target) => {
-        $target.style.height = '50vh';
-        $target.style.width = '100vw';
-        $target.style.overflow = 'hidden';
-      });
-    });
-  }
-
   componentDidMount() {
     this.slideManager = getSlider(this.$slider, {
       slideCount: slides.length,
@@ -83,16 +44,39 @@ class Collections extends React.Component<any, any> {
       slideHookRefs: this.hookRefs,
     });
     this.slideManager.init();
-    this.slideManager.on(SLIDE_EVENTS.HOOK_TOGGLE, this.toggleSliderOff);
+    this.slideManager.on(SLIDE_EVENTS.HOOK_TOGGLE, this.toggleSliderState);
+  }
+
+  toggleSliderState = () => {
+    if(this.slideManager) {
+      this.setState((state) => ({
+        ...state,
+        showItemDetails: !state.showItemDetails,
+      }));
+      this.slideManager.toggleSliderState();
+    }
   }
 
   render() {
-    console.log("re-rendering");
+    const {
+      showItemDetails,
+    } = this.state;
     return (
-      <div ref={ref => this.$sliderWrapper = ref} css={styles.wrapper(this.state)}>
+      <div 
+        ref={ref => this.$sliderWrapper = ref} 
+        css={css`
+          ${styles.wrapper}
+          background-color: ${showItemDetails ? 'inherit' : '#000'};
+          overflow: ${showItemDetails ? 'auto' : 'hidden'};
+        `}
+      >
         <div
           ref={ref => this.$slider = ref}
-          css={styles.slider}
+          css={css`
+            ${styles.slider}
+            overflow: ${showItemDetails ? 'hidden' : 'visible'};
+            transition: height .2s linear;
+          `}
         >
           {slides.map((slide, i) => (
             <div
@@ -104,16 +88,16 @@ class Collections extends React.Component<any, any> {
               css={styles.slide}
             >
               <div
-                onClick={this.state.showItemDetails ? this._toggleSliderOn : this._toggleSliderOff}
+                onClick={this.toggleSliderState}
                 ref={this.createHookRef}
                 css={styles.hook}
               >
-
+                {showItemDetails ? 'Show Less' : 'Show more'}
               </div>
             </div>
           ))}
         </div>
-        {this.state.showItemDetails && <p>
+        {this.state.showItemDetails && <p css={css` padding: 10px; `}>
 
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. In lacinia facilisis lacus, quis volutpat nunc tincidunt eu. Suspendisse facilisis rhoncus sapien, sodales dictum erat vulputate vel. Vivamus euismod eu nibh eget consectetur. Nullam aliquam scelerisque neque, eget scelerisque felis pharetra vitae. Praesent quis enim et tellus tempor scelerisque in at velit. Phasellus ac odio lectus. In augue est, gravida eu est in, vulputate mattis libero. Nunc consequat commodo pretium.
 

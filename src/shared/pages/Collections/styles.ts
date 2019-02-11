@@ -1,9 +1,7 @@
 import { css } from '@emotion/core';
 
-export const wrapper = ({ showItemDetails = false as boolean }) => css`
-  background-color: ${showItemDetails ? 'inherit' : '#000'};
+export const wrapper = css`
   position: relative;
-  overflow: ${showItemDetails ? 'auto' : 'hidden'};
   transform: translate3d(0px, 0px, 0px);
 `
 
@@ -44,8 +42,10 @@ export const hook = css`
   border: 1px solid #efefef;
   background: #fff;
   border-radius: 10px;
-  width: 60px;
+  width: 120px;
   height: 60px;
+  line-height: 60px;
+  text-align: center;
   position: absolute;
   margin: auto;
   bottom: 10px;
