@@ -1,6 +1,6 @@
-##This is a starting point for my projects.
+A basic starting point for projects/experiments.
 
-##Why after.js:
+Why after.js:
 - It seems to be the least opinitiated SSR framework out there. Its codebase is also easier to grok to spinning my own solution or forking it if needed should be easier to do.
 - Best of both worlds, work in peace without worrying about webpack and when needed, fork it and monkey around or spin your own webpack setup.
 
