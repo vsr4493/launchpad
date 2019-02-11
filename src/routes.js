@@ -11,4 +11,12 @@ export default [
       Placeholder: () => <div>...LOADING...</div>, // this is optional, just returns null by default
     }),
   },
+  {
+    path: '/collections',
+    exact: true,
+    component: asyncComponent({
+      loader: () => import('./shared/pages/Collections'), // required
+      Placeholder: () => <div>...LOADING...</div>, // this is optional, just returns null by default
+    }),
+  },
 ];
