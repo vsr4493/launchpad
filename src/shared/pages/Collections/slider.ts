@@ -344,7 +344,7 @@ const getSlider = (
   });
 
   // Maaaaan, you can't touch this... Setup recognizers for event detection
-  hammertime.add(new Hammer.Pan({ threshold: 0, pointers: 1 }));
+  hammertime.add(new Hammer.Pan({ threshold: 50, pointers: 1 }));
   hammertime.add(new Hammer.Swipe()).recognizeWith(hammertime.get('pan'));
   hammertime.add(new Hammer.Rotate({ threshold: 0 })).recognizeWith(hammertime.get('pan'));
   hammertime.add(new Hammer.Tap({ threshold: 10, time: 250 }));
