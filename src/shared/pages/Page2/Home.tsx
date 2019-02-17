@@ -20,23 +20,14 @@ class Home extends React.Component<any, HomeState> {
     super(props);
     this.state = {
       isClicked: false,
-      name: null,
     };
   }
 
   static async getInitialProps({ req, res, match, history, location, ...ctx }: any) {
-    console.log("fetching");
-    return new Promise((resolve, reject) => {
-      setTimeout(() => resolve({ name: 'vsr' }), 2000);
-    });
-  }
 
-  componentDidMount() {
-    /*setTimeout(() => {
-      this.setState({
-        name: 'vsr',  
-      });
-    }, 2000);*/
+    return new Promise((resolve, reject) => {
+      setTimeout(() => resolve({ }), 200);
+    });
   }
 
   onClick = () => this.setState(actions.toggleClick);
@@ -47,7 +38,7 @@ class Home extends React.Component<any, HomeState> {
         ${styles.header}
         background-color: ${this.state.isClicked ? '#e74c3c' : '#c0392b'};
       `}>
-        <h1>Home page</h1>
+        <h1>Page 2</h1>
       </div>
     );
   }
