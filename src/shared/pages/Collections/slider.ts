@@ -1,4 +1,5 @@
 import flipTo from 'shared/utils/flipTo';
+import anime from 'animejs';
 
 let Hammer: any = null;
 if(typeof window !== 'undefined' && Hammer === null) {
@@ -131,15 +132,31 @@ const getSlider = (
   */
   const log = mode === MODES.DEV ? console.log : () => {};
 
-  const stylesToString = ({ translateX = 0 as number, translateY = 0 as number }) => 
-    `translate3d(${translateX}px, ${translateY}px, 0)`;
+  const stylesToString = ({ translateX = 0 as number, translateY = 0 as number, rotateZ = 0 }, inverseRotation = false) => 
+    `translate3d(${translateX}px, ${translateY}px, 0) rotateZ(${rotateZ}deg)`;
 
-  function updateTarget($target: HTMLElement, transformStyles: string, opacity?: number) {
+  function updateTarget($target: HTMLElement, transformStyles: string, opacity?: number, transformOrigin?: string) {
     $target.style.webkitTransform = transformStyles;
     $target.style.mozTransform = transformStyles;
     $target.style.transform = transformStyles;
     if(opacity) {
       $target.style.opacity = String(opacity);  
+    }
+    if(transformOrigin) {
+      $target.style.transformOrigin = transformOrigin;   
+    }
+  }
+
+  const MAX_ANGLE = 30;
+
+  function updateSlideRotation() {
+    const slideRefs = settings.slideRefs;
+    const direction = trackState.direction;
+    const current = slideRefs[pageState.current];
+    const adjacent = slideRefs[pageState.current + direction];
+    updateTarget(current, `rotateZ(-${trackState.angle * MAX_ANGLE}deg)`, 1, `${direction > 0 ? 'left' : 'right'} bottom`);
+    if(adjacent) {
+      updateTarget(adjacent, `rotateZ(${MAX_ANGLE - trackState.angle * MAX_ANGLE}deg)`, 1, `${direction > 0 ? 'right' : 'left'} bottom`);  
     }
   }
 
@@ -159,6 +176,7 @@ const getSlider = (
       case PAN_MODES.SLIDE_HORIZONTAL: {
         const transformStyles = stylesToString(trackState);
         updateTarget(settings.$target, transformStyles);
+        updateSlideRotation();
       }
     }
     // Ready for more animations!
@@ -202,10 +220,31 @@ const getSlider = (
     trackState.translateX = pageState.translateX;
     trackState.translateY = pageState.translateY;
     const nextStyleString = stylesToString(trackState);
+
+    // Add classes
+    settings.$target.classList.add('is-animating');
     // Start animating to next slide
-    const animation = $target.animate([{ transform: currentStyleString }, { transform: nextStyleString }], deltaTime);
+    updateTarget(settings.$target, stylesToString(trackState));
+    //const animation = $target.animate([{ transform: currentStyleString }, { transform: nextStyleString }], deltaTime);
+    // Animate individual slides to next or previous
+    const currentSlide = settings.slideRefs[pageState.current];
+    const adjacentSlide = settings.slideRefs[pageState.current + trackState.direction];
+
+    currentSlide.style.transform = 'none';
+    currentSlide.classList.add('is-animating')
+    if(adjacentSlide) {
+      adjacentSlide.style.transform = 'none';  
+      adjacentSlide.classList.add('is-animating')
+    }
+
+    /*anime({
+      targets: adjacentSlide ? [currentSlide, adjacentSlide] : currentSlide,
+      rotateZ: 0,
+      duration: 250,
+    });*/
+
     // Call teardown handler once done!
-    animation.onfinish = postSlideToAnimation;
+    //animation.onfinish = postSlideToAnimation;
   }
 
   /**
@@ -273,6 +312,9 @@ const getSlider = (
         }
         case PAN_MODES.SLIDE_HORIZONTAL: {
           trackState.translateX = pageState.translateX + e.deltaX;
+          // Get the current and previous slide, and animate them both
+          trackState.angle = Math.abs((e.deltaX / slideWidth));
+          trackState.direction = 1;
           break;
         }
       }

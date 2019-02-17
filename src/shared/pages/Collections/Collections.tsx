@@ -2,7 +2,8 @@ import React from 'react';
 import { css } from '@emotion/core';
 import getSlider, { SLIDE_EVENTS } from './slider';
 import * as styles from './styles';
-
+import { BaseButton as Button } from 'shared/components/Button';
+import { ClassNames } from '@emotion/core'
 
 const slides = ['red', 'blue', 'cyan'];
 
@@ -15,7 +16,7 @@ class Collections extends React.Component<any, any> {
   constructor(props) {
     super(props);
     this.slideRefs = [];
-    this.hookRefs = [];
+    this.hookRefs = slides.map(slide => React.createRef());
     this.state = {
       currentSlide: 0,
       showItemDetails: false,
@@ -41,8 +42,9 @@ class Collections extends React.Component<any, any> {
     this.slideManager = getSlider(this.$slider, {
       slideCount: slides.length,
       slideRefs: this.slideRefs,
-      slideHookRefs: this.hookRefs,
+      slideHookRefs: this.hookRefs.map(ref => ref.current),
     });
+    console.log(this.hookRefs);
     this.slideManager.init();
     this.slideManager.on(SLIDE_EVENTS.HOOK_TOGGLE, this.toggleSliderState);
   }
@@ -87,13 +89,18 @@ class Collections extends React.Component<any, any> {
               }}
               css={styles.slide}
             >
-              <div
-                onClick={this.toggleSliderState}
-                ref={this.createHookRef}
-                css={styles.hook}
-              >
-                {showItemDetails ? 'Show Less' : 'Show more'}
-              </div>
+              <ClassNames>
+                {({ css, cx }) => (
+                  <Button
+                    ripple
+                    onClick={this.toggleSliderState}
+                    ref={this.hookRefs[i]}
+                    className={css`${styles.hook}`}
+                  >
+                    {showItemDetails ? 'Show Less' : 'Show more'}
+                  </Button>
+                )}
+              </ClassNames>
             </div>
           ))}
         </div>
