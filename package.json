@@ -21,6 +21,7 @@
     "express": "4.16.4",
     "hammerjs": "2.0.8",
     "normalize.css": "8.0.1",
+    "polished": "3.0.0",
     "razzle": "3.0.0-alpha.2",
     "react": "16.8.1",
     "react-dom": "16.8.1",
