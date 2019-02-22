@@ -75,7 +75,7 @@ class Collections extends React.Component<any, any> {
           css={css`
             ${styles.slider}
             overflow: ${showItemDetails ? 'hidden' : 'visible'};
-            transition: height .2s linear;
+            transition: height .05s linear;
           `}
         >
           {slides.map((slide, i) => (
